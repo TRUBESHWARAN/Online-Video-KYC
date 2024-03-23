@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+PyPDF2
+opencv-python-headless 
+numpy
+dlib
+face-recognition

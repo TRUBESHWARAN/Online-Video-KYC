@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Video KYC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            height: 100vh;
+        }
+
+        .left {
+            width: 50%;
+            padding: 60px 60px;
+            background-color: #f0f0f0;
+            background-color: rgb(181, 243, 181);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .right {
+            width: 50%;
+            padding: 20px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #video-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        #chat-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        #message-box {
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #send-btn {
+            width: calc(100% - 20px);
+            padding: 5px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .bot-message {
+            background-color: #f0f0f0;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px; /* Adjust width as needed */
+        }
+    </style>
+</head>
+<body>
+    <img class="logo" src="logo.jpg" alt="Logo">
+    <div class="container">
+        <div class="left">
+            <div id="video-container">
+                <!-- Live camera video capture will be displayed here -->
+            </div>
+        </div>
+        <div class="right">
+            <div id="chat-container">
+                <!-- Chatbot messages and user input will be displayed here -->
+            </div>
+            <input type="text" id="message-box" placeholder="Type your message...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var chatContainer = document.getElementById('chat-container');
+            var language;
+            var currentQuestion;
+            var responseCount = 0; // Keep track of the number of responses saved
+
+            function appendMessage(message, isBot) {
+                var messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                messageElement.classList.add('message');
+                if (isBot) {
+                    messageElement.classList.add('bot-message');
+                } else {
+                    messageElement.classList.add('user-message');
+                }
+                chatContainer.appendChild(messageElement);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                speakMessage(message);
+            }
+            
+            function speakMessage(message) {
+                var speech = new SpeechSynthesisUtterance();
+                speech.text = message;
+                speech.lang = language === 'hindi' ? 'hi-IN' : 'en-US'; // Set language based on user selection
+                speechSynthesis.speak(speech);
+            }
+
+            function askQuestion(question) {
+                appendMessage(question, true);
+                speakMessage(question);
+                currentQuestion = question;
+
+            }
+
+            function processUserResponse(response) {
+                appendMessage(response, false);
+
+                // Save user's response to the database
+                fetch('/save_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        response: response,
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response saved:', data);
+                })
+                .catch(error => {
+                    console.error('Error saving response:', error);
+                });
+
+                // Process user's response
+                if (!language) {
+                    // If language is not selected yet
+                    if (response.toLowerCase() === 'english') {
+                        language = 'english';
+                        askQuestion('Great! Let\'s continue in English. Please provide your name:');
+                    } else if (response.toLowerCase() === 'hindi') {
+                        language = 'hindi';
+                        askQuestion('बढ़िया! चलो हिंदी में जारी रखते हैं। कृपया अपना नाम बताएं:');
+                    } else {
+                        askQuestion('Please choose either "English" or "Hindi".');
+                    }
+                } else {
+                    // Language is selected, continue with questions in the chosen language
+                    if (language === 'english') {
+                        // Ask questions in English
+                        switch (currentQuestion.toLowerCase()) {
+                            case 'great! let\'s continue in english. please provide your name:':
+                                askQuestion('Thanks! Now, please enter your age:');
+                                break;
+                            case 'thanks! now, please enter your age:':
+                                askQuestion('Great! Lastly, please provide your email:');
+                                break;
+                            case 'great! lastly, please provide your email:':
+                                askQuestion('Thank you! We have all the required information now.');
+                                break;
+                            default:
+                                askQuestion('Please provide a valid response.');
+                        }
+                    } else if (language === 'hindi') {
+                        // Ask questions in Hindi
+                        switch (currentQuestion.toLowerCase()) {
+                            case 'बढ़िया! चलो हिंदी में जारी रखते हैं। कृपया अपना नाम बताएं:':
+                                askQuestion('धन्यवाद! अब, कृपया अपनी उम्र दर्ज करें:');
+                                break;
+                            case 'धन्यवाद! अब, कृपया अपनी उम्र दर्ज करें:':
+                                askQuestion('बढ़िया! अंत में, कृपया अपना ईमेल प्रदान करें:');
+                                break;
+                            case 'बढ़िया! अंत में, कृपया अपना ईमेल प्रदान करें:':
+                                askQuestion('धन्यवाद! हमें सभी आवश्यक जानकारी है।');
+                                break;
+                            default:
+                                askQuestion('कृपया एक वैध प्रतिक्रिया प्रदान करें।');
+                        }
+                    }
+                }
+
+                // Increment response count and call compare_faces when count reaches 4
+                responseCount++;
+                if (responseCount === 4) {
+                    callCompareFaces();
+                }
+            }
+
+            // Initial question from the chatbot
+            askQuestion('Welcome! Please choose your preferred language: English or Hindi.');
+
+            // Access user's camera and display video feed
+            var videoContainer = document.getElementById('video-container');
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    var video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.autoplay = true;
+                    video.width = 320; // Adjust width as needed
+                    video.height = 240; // Adjust height as needed
+                    videoContainer.appendChild(video);
+                })
+                .catch(function(err) {
+                    console.error('Error accessing camera:', err);
+                });
+
+            // Handle user input and send messages
+            var messageBox = document.getElementById('message-box');
+            var sendButton = document.getElementById('send-btn');
+            sendButton.addEventListener('click', function() {
+                var message = messageBox.value.trim();
+                if (message !== '') {
+                    processUserResponse(message);
+                    messageBox.value = '';
+                }
+            });
+
+            // Function to call compare_faces after main.html process is completed
+            function callCompareFaces() {
+                // Send an AJAX request to the Flask server to call the compare_faces function
+                fetch('/compare_faces')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('compare_faces function called:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error calling compare_faces function:', error);
+                    });
+            }
+
+            // Call the compare_faces function when the page is fully loaded
+            window.addEventListener('load', function() {
+                callCompareFaces();
+            });
+        });
+    </script>
+</body>
+</html>

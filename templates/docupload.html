@@ -1,0 +1,75 @@
+docuupload
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Upload</title>
+    <style>
+        body {
+            background-color: rgb(181, 243, 181);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        .upload-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: 50px auto;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px; /* Adjust width as needed */
+        }
+    </style>
+</head>
+<body>
+    <img class="logo" src="logo.jpg" alt="Logo">
+    <div class="upload-container">
+        <h1>Document Upload</h1>
+        <form action="/upload_docs" method="POST" enctype="multipart/form-data">
+            <label for="aadhaar">Upload Aadhaar Card (PDF):</label><br>
+            <input type="file" id="aadhaar" name="aadhaar" accept="application/pdf" required><br>
+            <label for="pan">Upload PAN Card (PDF):</label><br>
+            <input type="file" id="pan" name="pan" accept="application/pdf" required><br>
+            <input type="submit" value="Upload">
+        </form>
+    </div>
+</body>
+</html>
